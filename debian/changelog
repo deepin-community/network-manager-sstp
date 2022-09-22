@@ -1,0 +1,35 @@
+network-manager-sstp (1.3.0.1-3) UNRELEASED; urgency=medium
+
+  * update
+
+ -- Eivind Naess <eivnaes@yahoo.com>  Mon, 25 Jul 2022 13:42:34 +0800
+
+network-manager-sstp (1.3.0.1-3) unstable; urgency=medium
+
+  [ donghualin ]
+  * UNRELEASED
+
+ -- caixiangrong <caixiangrong@uniontech.com>  Mon, 25 Jul 2022 13:39:50 +0800
+
+network-manager-sstp (1.3.0.1-2) unstable; urgency=low
+
+  * Update changelog file:
+    - update release version to 1.3.0.1
+
+ -- donghualin <donghualin@uniontech.com>  Mon, 22 Jun 2022 11:09:00 -0800
+
+network-manager-sstp (1.3.0-2) unstable; urgency=low
+
+  * Update control file:
+    - Set Standards-Version to 4.6.0.1
+    - Update VCS fields to point to salsa.debian.org
+  * Update copyright file:
+    - match nm-glib.h after wildcard
+
+ -- Eivind Naess <eivnaes@yahoo.com>  Mon, 6 Jun 2022 08:00:00 -0800
+
+network-manager-sstp (1.3.0-1) unstable; urgency=low
+
+  * Initial release (Closes: #1006705)
+
+ -- Eivind Naess <eivnaes@yahoo.com>  Thu, 10 Mar 2022 07:00:00 -0800

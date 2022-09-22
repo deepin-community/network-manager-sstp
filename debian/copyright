@@ -1,0 +1,81 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: network-manager-sstp
+Upstream-Contact: Eivind Naess <eivnaes@yahoo.com>
+Source: https://gitlab.gnome.org/GNOME/network-manager-sstp
+
+Files: *
+Copyright: 2011 Eivind Naess <eivnaes@yahoo.com>
+           2008 - 2018 Red Hat, Inc.
+           2007 - 2008 Novell, Inc.
+           2008 Dan Williams <dcbw@redhat.com>
+License: GPL-2+
+
+Files: appdata/*
+Copyright: 2017 Lubomir Rintel <lkundrak@v3.sk>
+           2021 Eivind Naess <eivnaes@yahoo.com>
+License: CC0-1.0
+
+Files: po/*
+Copyright:
+           1995 - 1997 Ulrich Drepper <drepper@gnu.ai.mit.edu>
+           2004 - 2008 Rodney Dawes <dobey.pwns@gmail.com>
+           2004 - 2022 Free Software Foundation, Inc.
+           2005 Dan Williams <dcbw@redhat.com>
+           2006 - 2007 Kjartan Maraas
+           2006 - 2008 Ilkka Tuohela
+           2007 The GNOME Project.
+           2007 - 2008 The GNOME Foundation
+           2009 Krasimir Chonov <mk2616@abv.bg>.
+           2010 IFSUG Translation Group
+           2011 - 2012 Rosetta Contributors and Canonical Ltd
+License: GPL-2+
+
+Files: shared/nm-default.h
+       shared/nm-utils/*
+Copyright: 2005 - 2008 Tim Niemueller <tim@niemueller.de>
+           2005 - 2008 Dan Williams <dcbw@redhat.com>
+           2008 - 2018 Red Hat, Inc.
+           2012 Colin Walters <walters@verbum.org>
+License: LGPL-2+
+
+Files: shared/nm-utils/nm-glib.h
+Copyright: 2008 - 2018 Red Hat, Inc.
+License: GPL-2+
+
+License: GPL-2+
+ This package is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+ .
+ This package is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License
+ along with this program. If not, see <http://www.gnu.org/licenses/>
+ .
+ On Debian systems, the complete text of the GNU General Public
+ License version 2 can be found in "/usr/share/common-licenses/GPL-2".
+
+License: LGPL-2+
+ This package is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2 of the License, or (at your option) any later version.
+ .
+ This package is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License
+ along with this program. If not, see <http://www.gnu.org/licenses/>.
+ .
+ On Debian systems, the complete text of the GNU Lesser General
+ Public License can be found in "/usr/share/common-licenses/LGPL-2".
+
+License: CC0-1.0
+ On Debian systems, the complete text of the Creative Commons Zero v1.0
+ Universal License can be found in "/usr/share/common-licenses/CC0-1.0".

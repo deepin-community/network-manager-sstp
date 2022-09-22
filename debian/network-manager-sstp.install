@@ -1,0 +1,6 @@
+usr/lib/*/NetworkManager/libnm-vpn-plugin-sstp.so
+usr/lib/NetworkManager/VPN/nm-sstp-service.name
+usr/lib/NetworkManager/nm-sstp-service
+usr/lib/pppd/*/*.so
+usr/share/dbus-1/
+usr/share/locale/
