@@ -33,6 +33,7 @@ BUILT_SOURCES =
 shared_sources = \
 	shared/nm-default.h \
 	shared/nm-utils/gsystem-local-alloc.h \
+	shared/nm-utils/nm-glib.h \
 	shared/nm-utils/nm-macros-internal.h \
 	shared/nm-utils/nm-shared-utils.h \
 	shared/nm-utils/nm-shared-utils.c
@@ -96,7 +97,7 @@ src_nm_sstp_service_SOURCES = \
 	shared/utils.c \
 	shared/utils.h \
 	shared/nm-service-defines.h \
-	src/nm-ppp-status.h \
+	src/nm-sstp-pppd-status.h \
 	src/nm-sstp-service.h \
 	src/nm-sstp-service.c
 src_nm_sstp_service_CPPFLAGS = \
@@ -114,12 +115,15 @@ pppd_plugin_LTLIBRARIES = src/nm-sstp-pppd-plugin.la
 src_nm_sstp_pppd_plugin_la_SOURCES = \
 	shared/nm-utils/nm-shared-utils.c \
 	src/nm-sstp-pppd-plugin.c \
-	src/nm-sstp-pppd-mppe.c \
 	src/nm-sstp-pppd-mppe.h \
-	src/nm-ppp-status.h
+	src/nm-sstp-pppd-compat.h \
+	src/nm-sstp-pppd-status.h
+if !WITH_PPP_MPPE_KEYS
+src_nm_sstp_pppd_plugin_la_SOURCES += \
+	src/nm-sstp-pppd-mppe.c
+endif
 src_nm_sstp_pppd_plugin_la_CPPFLAGS = \
-    $(src_cppflags) \
-    -DUSE_EAPTLS -DINET6
+	$(src_cppflags)
 src_nm_sstp_pppd_plugin_la_LDFLAGS = \
 	-module -avoid-version
 src_nm_sstp_pppd_plugin_la_LIBADD = \
@@ -268,40 +272,6 @@ properties_libnm_gtk4_vpn_plugin_sstp_editor_la_LDFLAGS = \
 
 ###############################################################################
 
-if WITH_LIBNM_GLIB
-plugin_LTLIBRARIES += properties/libnm-sstp-properties.la
-endif
-
-properties_libnm_sstp_properties_la_SOURCES = \
-	shared/nm-utils/nm-glib.h \
-	$(plugin_sources) \
-	$(editor_sources)
-
-nodist_properties_libnm_sstp_properties_la_SOURCES = \
-	properties/resources.c \
-	properties/resources.h
-
-properties_libnm_sstp_properties_la_CFLAGS = \
-	$(GLIB_CFLAGS) \
-	$(GTK_CFLAGS) \
-	$(LIBNM_GLIB_CFLAGS) \
-	$(LIBNM_GTK_CFLAGS)
-
-properties_libnm_sstp_properties_la_CPPFLAGS = \
-	-DNETWORKMANAGER_COMPILATION='NM_NETWORKMANAGER_COMPILATION_LIB|NM_NETWORKMANAGER_COMPILATION_WITH_LIBNM_UTIL' \
-	$(properties_cppflags)
-
-properties_libnm_sstp_properties_la_LIBADD = \
-	$(GTK_LIBS) \
-	$(LIBNM_GLIB_LIBS) \
-	$(LIBNM_GLIB_LIBS)
-
-properties_libnm_sstp_properties_la_LDFLAGS = \
-	-avoid-version \
-	-Wl,--version-script="$(srcdir)/properties/libnm-sstp-properties.ver"
-
-###############################################################################
-
 if WITH_GNOME
 libexec_PROGRAMS += auth-dialog/nm-sstp-auth-dialog
 endif
@@ -329,28 +299,14 @@ auth_dialog_nm_sstp_auth_dialog_LDADD = \
 
 ###############################################################################
 
-if WITH_LIBNM_GLIB
-# Install a file with full path to plugins for an old gnome-shell
-# https://bugzilla.gnome.org/show_bug.cgi?id=693590
-install-data-hook:
-	mkdir -p $(DESTDIR)$(sysconfdir)/NetworkManager/VPN
-	sed -e "1s|^|# This file is obsoleted by a file in $(NM_VPN_SERVICE_DIR)\n\n|" \
-	    -e 's|[@]LIBEXECDIR[@]|$(libexecdir)|g' \
-	    -e 's|[@]PLUGINDIR[@]|@NM_PLUGIN_DIR@|g' \
-	    <$(srcdir)/nm-sstp-service.name.in \
-	    >$(DESTDIR)$(sysconfdir)/NetworkManager/VPN/nm-sstp-service.name
-
-uninstall-hook:
-	 rm -f $(DESTDIR)$(sysconfdir)/NetworkManager/VPN/nm-sstp-service.name
-endif
-
 appdatadir = $(datadir)/metainfo
+appdata_in_files = appdata/network-manager-sstp.metainfo.xml.in
 appdata_files = $(appdata_in_files:.xml.in=.xml)
 if WITH_GNOME
 appdata_DATA = $(appdata_files)
+$(appdata_DATA): $(appdata_in_files)
+	$(AM_V_GEN)$(MSGFMT) --xml --template $< -d $(top_srcdir)/po -o $@
 endif
-appdata_in_files = appdata/network-manager-sstp.metainfo.xml.in
-@INTLTOOL_XML_RULE@
 
 nm-sstp-service.name: $(srcdir)/nm-sstp-service.name.in
 	$(AM_V_GEN) sed -e 's|[@]LIBEXECDIR[@]|$(libexecdir)|g' \
@@ -361,18 +317,10 @@ EXTRA_DIST += \
 	nm-sstp-service.name.in \
 	$(dbusservice_DATA) \
 	$(appdata_in_files) \
-	$(appdata_files) \
-	intltool-extract.in \
-	intltool-merge.in \
-	intltool-update.in
+	$(appdata_files)
 
 CLEANFILES += \
 	$(nmvpnservice_DATA) \
 	$(appdata_files)
-
-DISTCLEANFILES = \
-	intltool-extract \
-	intltool-merge \
-	intltool-update
 
 ACLOCAL_AMFLAGS = -I m4

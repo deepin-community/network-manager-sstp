@@ -2,20 +2,17 @@
 
 PPPD_PLUGIN_DIR := $(shell dh_ppp --plugin-dir)
 
-export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
-
 %:
 	dh $@ --with ppp
 
 override_dh_auto_configure:
 	intltoolize; \
 	dh_auto_configure -- \
-		--libexecdir=/usr/lib/NetworkManager \
 		--disable-static \
 		--with-gtk4 \
 		--with-pppd-plugin-dir=$(PPPD_PLUGIN_DIR) \
-		--with-pppd-auth-notify-support
+		--with-pppd-auth-notify-support \
+		--with-pppd-ext-tls-settings-support
 
-override_dh_install:
+execute_before_dh_install:
 	find debian/tmp -name '*.la' -print -delete
-	dh_install

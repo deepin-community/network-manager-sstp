@@ -20,19 +20,10 @@
  *
  */
 
-#include <config.h>
+#ifndef __CONFIG_H__
 #define __CONFIG_H__
-#include <pppd/pppd.h>
-#include <pppd/fsm.h>
-#include <pppd/ccp.h>
-#include <pppd/eui64.h>
-#include <pppd/ipcp.h>
-#include <pppd/ipv6cp.h>
-#include <pppd/chap-new.h>
-#include <pppd/chap_ms.h>
-#include <pppd/eap.h>
-
-#include "nm-default.h"
+#include <config.h>
+#endif
 
 #include <string.h>
 #include <stdlib.h>
@@ -43,26 +34,26 @@
 #include <sys/un.h>
 #include <paths.h>
 #include <unistd.h>
+
 #include <sstp-client/sstp-api.h>
 
-#include "nm-ppp-status.h"
-#include "nm-sstp-service.h"
+#include "nm-sstp-pppd-compat.h"
+#include "nm-sstp-pppd-status.h"
 #include "nm-sstp-pppd-mppe.h"
+
+#include "nm-default.h"
+#include "nm-sstp-service.h"
 #include "nm-utils/nm-shared-utils.h"
 #include "nm-utils/nm-vpn-plugin-macros.h"
 
 #ifndef USE_PPPD_AUTH_HOOK
-
-#define PPP_PROTO_CHAP              0xc223
-#define PPP_PROTO_EAP               0xc227
-
 static int sstp_notify_sent = 0;
-
 #endif  /* USE_PPPD_AUTH_HOOK */
 
 int plugin_init (void);
 
-char pppd_version[] = VERSION;
+
+char pppd_version[] = PPPD_VERSION;
 
 /*****************************************************************************/
 typedef void (*protrej_fn)(int unit);
@@ -200,7 +191,7 @@ nm_sstp_getsock(void)
 
     /* Setup the address */
     addr.sun_family = AF_UNIX;
-    snprintf(addr.sun_path, sizeof(addr.sun_path), "/var/run/sstpc/sstpc-%s", ipparam);
+    snprintf(addr.sun_path, sizeof(addr.sun_path), "/var/run/sstpc/sstpc-%s", ppp_ipparam());
 
     /* Connect the socket */
     ret = connect(sock, (struct sockaddr*) &addr, alen);
@@ -225,7 +216,7 @@ done:
  * Extract the address SSTPC resolved as the hostname
  */
 static int
-nm_sstp_getaddr(struct sockaddr_in *addr)
+nm_sstp_getaddr(struct sockaddr_storage *addr)
 {
     char *buff = NULL;
     int retval = (-1);
@@ -233,6 +224,7 @@ nm_sstp_getaddr(struct sockaddr_in *addr)
     int ret    = (-1);
     int cnt    = (SSTP_API_ATTR_MAX+1);
     char name[255] = {};
+    char ipstr[NM_INET_ADDRSTRLEN];
     sstp_api_msg_st msg;
     sstp_api_msg_t  type;
     sstp_api_attr_st *attr;
@@ -297,7 +289,16 @@ nm_sstp_getaddr(struct sockaddr_in *addr)
     }
 
     /* Copy the result to the output argument */
-    memcpy(addr, attr->attr_data, sizeof(struct sockaddr_in));
+    memcpy(addr, attr->attr_data, MIN(attr->attr_len, sizeof(*addr)));
+    switch (addr->ss_family)
+    {
+        case AF_INET:
+            nm_utils_inet4_ntop(((struct sockaddr_in*)addr)->sin_addr.s_addr, ipstr);
+            break;
+        case AF_INET6:
+            nm_utils_inet6_ntop(&((struct sockaddr_in6*)addr)->sin6_addr, ipstr);
+            break;
+    }
 
     /* Get the gateway name */
     attr = list[SSTP_API_ATTR_GATEWAY];
@@ -310,7 +311,7 @@ nm_sstp_getaddr(struct sockaddr_in *addr)
     memcpy(name, attr->attr_data, attr->attr_len);
 
     _LOGI ("sstp-plugin: sstpc is connected to %s using %s",
-           name, inet_ntoa(addr->sin_addr));
+           name, ipstr);
 
     /* Success */
     retval = 0;
@@ -361,7 +362,7 @@ nm_sstp_notify(void)
         if (key_len > 0) {
 
             sstp_api_attr_add(msg, SSTP_API_ATTR_MPPE_SEND, key_len, key);
-            if (debug) {
+            if (debug_on()) {
                 slprintf(key_buf, sizeof(key_buf)-1, "%0.*B", key_len, key);
                 _LOGI ("The MPPE-Send-Key: %s", key);
             }
@@ -372,7 +373,7 @@ nm_sstp_notify(void)
         if (key_len > 0) {
 
             sstp_api_attr_add(msg, SSTP_API_ATTR_MPPE_RECV, key_len, key);
-            if (debug) {
+            if (debug_on()) {
                 slprintf(key_buf, sizeof(key_buf)-1, "%0.*B", key_len, key);
                 _LOGI ("The MPPE-Recv-Key: %s", key);
             }
@@ -461,7 +462,7 @@ nm_ip4_add_route(GVariantBuilder *builder, int network, int gateway, int prefix,
 static GVariant*
 nm_ip4_get_params(void)
 {
-    guint32 pppd_made_up_address = htonl (0x0a404040 + ifunit);
+    guint32 pppd_made_up_address = htonl (0x0a404040 + ppp_ifunit());
     ipcp_options *opts = &ipcp_gotoptions[0];
     ipcp_options *peer_opts = &ipcp_hisoptions[0];
     GVariantBuilder builder;
@@ -565,7 +566,7 @@ nm_send_config (void)
 {
     GVariantBuilder builder;
     GVariant *ip4config = NULL, *ip6config = NULL;
-    struct sockaddr_in addr;
+    struct sockaddr_storage addr;
     int mtu;
 
     g_return_if_fail (G_IS_DBUS_PROXY (gl.proxy));
@@ -574,9 +575,9 @@ nm_send_config (void)
 
     g_variant_builder_add (&builder, "{sv}",
                            NM_VPN_PLUGIN_CONFIG_TUNDEV,
-                           g_variant_new_string (ifname));
+                           g_variant_new_string (ppp_ifname()));
 
-    mtu = netif_get_mtu (ifunit);
+    mtu = ppp_get_mtu (ppp_ifunit());
     g_variant_builder_add (&builder, "{sv}",
                            NM_VPN_PLUGIN_CONFIG_MTU,
                             g_variant_new_uint32 (mtu));
@@ -584,12 +585,12 @@ nm_send_config (void)
     /* Request the address of the server sstpc connected to */
     if (0 == nm_sstp_getaddr(&addr)) {
 
-        if (addr.sin_family == AF_INET) {
+        if (addr.ss_family == AF_INET) {
             g_variant_builder_add (&builder, "{sv}",
                                    NM_VPN_PLUGIN_CONFIG_EXT_GATEWAY,
-                                   g_variant_new_uint32 (addr.sin_addr.s_addr));
+                                   g_variant_new_uint32 (((struct sockaddr_in*)&addr)->sin_addr.s_addr));
         }
-        if (addr.sin_family == AF_INET6) {
+        if (addr.ss_family == AF_INET6) {
             g_variant_builder_add (&builder, "{sv}",
                                    NM_VPN_PLUGIN_CONFIG_EXT_GATEWAY,
                                    g_variant_new_fixed_array (G_VARIANT_TYPE_BYTE, &((struct sockaddr_in6*)&addr)->sin6_addr, 16, 1));
@@ -902,17 +903,18 @@ plugin_init (void)
     pap_passwd_hook = nm_get_credentials;
     pap_check_hook = nm_get_pap_check;
     eaptls_passwd_hook = nm_get_credentials;
+
 #ifndef USE_PPPD_AUTH_HOOK
     snoop_recv_hook = nm_snoop_recv;
     new_phase_hook = nm_new_phase;
 #endif
 
-    add_notifier (&phasechange, nm_phasechange, NULL);
-    add_notifier (&exitnotify, nm_exit_notify, NULL);
-    add_notifier (&ip_up_notifier, nm_ip_up, NULL);
-    add_notifier (&ipv6_up_notifier, nm_ip6_up, NULL);
+    ppp_add_notify (NF_PHASE_CHANGE, nm_phasechange, NULL);
+    ppp_add_notify (NF_EXIT, nm_exit_notify, NULL);
+    ppp_add_notify (NF_IP_UP, nm_ip_up, NULL);
+    ppp_add_notify (NF_IPV6_UP, nm_ip6_up, NULL);
 #ifdef USE_PPPD_AUTH_HOOK
-    add_notifier (&auth_up_notifier, nm_auth_notify, NULL);
+    ppp_add_notify (NF_AUTH_UP, nm_auth_notify, NULL);
 #endif
 
     gl.old_protrej = ipv6cp_protent.protrej;
