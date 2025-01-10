@@ -1,2 +1,2 @@
 version=4
-http://sf.net/sstp-client/NetworkManager-sstp-(\d\S+)\.tar.bz2
+https://gitlab.gnome.org/GNOME/network-manager-sstp/tags?sort=updated_desc archive/release-@ANY_VERSION@/network-manager-sstp-release-\d\S*@ARCHIVE_EXT@

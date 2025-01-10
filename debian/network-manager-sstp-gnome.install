@@ -1,4 +1,4 @@
+usr/libexec/nm-sstp-auth-dialog
 usr/lib/*/NetworkManager/libnm-vpn-plugin-sstp-editor.so
 usr/lib/*/NetworkManager/libnm-gtk4-vpn-plugin-sstp-editor.so
-usr/lib/NetworkManager/nm-sstp-auth-dialog
 usr/share/metainfo/network-manager-sstp.metainfo.xml
